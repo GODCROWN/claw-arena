@@ -142,6 +142,7 @@ export const useGameStore = create<GameState>()(
       // ── Market Data ─────────────────────────────────────────────────────────
       marketAssets: INITIAL_ASSETS,
       startedAt: Date.now(), // start immediately — no wallet required
+      btcLiveAt: null,       // null until first successful Binance fetch
 
       // ── Actions ─────────────────────────────────────────────────────────────
 
@@ -394,7 +395,10 @@ export const useGameStore = create<GameState>()(
 
       updateMarketPrices: () => {
         set((state) => {
-          const updatedAssets = state.marketAssets.map(simulatePriceMove)
+          // BTC price is set live via setBtcMarketData — skip simulation for BTC
+          const updatedAssets = state.marketAssets.map((asset) =>
+            asset.symbol === 'BTC' ? asset : simulatePriceMove(asset)
+          )
           const updatedPositions = refreshPositionPnL(
             state.openPositions,
             updatedAssets
@@ -413,6 +417,28 @@ export const useGameStore = create<GameState>()(
         set((s) => ({
           equityHistory: [...s.equityHistory, point].slice(-2016), // ~30 days at 15-min ticks
         }))
+      },
+
+      setBtcMarketData: (price, ma30, priceHistory, change24h) => {
+        set((state) => {
+          const updatedAssets = state.marketAssets.map((asset) => {
+            if (asset.symbol !== 'BTC') return asset
+            return {
+              ...asset,
+              price,
+              ma30,
+              priceHistory,
+              change24h,
+            }
+          })
+          // Refresh unrealized P&L for any open BTC positions
+          const updatedPositions = refreshPositionPnL(state.openPositions, updatedAssets)
+          return {
+            marketAssets: updatedAssets,
+            openPositions: updatedPositions,
+            btcLiveAt: Date.now(),
+          }
+        })
       },
     }),
     {
@@ -434,6 +460,7 @@ export const useGameStore = create<GameState>()(
         thoughts: state.thoughts,
         marketAssets: state.marketAssets,
         startedAt: state.startedAt,
+        btcLiveAt: state.btcLiveAt,
       }),
     }
   )

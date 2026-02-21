@@ -6,6 +6,57 @@ import { useEffect } from 'react'
 import { useGameStore, computeEquity, computePnLPercent } from '@/store/useGameStore'
 import { Activity, Skull, Zap } from 'lucide-react'
 
+// ─── Live BTC Ticker ──────────────────────────────────────────────────────────
+
+function BtcTicker() {
+  const marketAssets = useGameStore((s) => s.marketAssets)
+  const btcLiveAt = useGameStore((s) => s.btcLiveAt)
+
+  const btc = marketAssets.find((a) => a.symbol === 'BTC')
+  if (!btc) return null
+
+  const isLive = btcLiveAt !== null
+  const changeColor = btc.change24h >= 0 ? 'text-[#00ff41]' : 'text-[#ff3333]'
+
+  return (
+    <div className="flex items-center gap-2 px-3 sm:px-4 md:px-6 py-1 border-b border-[#1a1a2e] bg-[#0a0a0f]/80 text-[9px] overflow-x-auto">
+      {/* LIVE / SIM badge */}
+      {isLive ? (
+        <span className="flex items-center gap-1 shrink-0 text-[#00ff41] border border-[#00ff41]/30 px-1.5 py-0.5 uppercase tracking-widest font-bold">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#00ff41] animate-pulse inline-block" />
+          LIVE
+        </span>
+      ) : (
+        <span className="shrink-0 text-[#3a3a5c] border border-[#3a3a5c]/30 px-1.5 py-0.5 uppercase tracking-widest">
+          SIM
+        </span>
+      )}
+
+      {/* BTC price */}
+      <span className="shrink-0 text-[#e0e0ff] font-bold tabular-nums">
+        BTC/USDT ${btc.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+      </span>
+
+      {/* 24h change */}
+      <span className={`shrink-0 tabular-nums ${changeColor}`}>
+        {btc.change24h >= 0 ? '+' : ''}{btc.change24h.toFixed(2)}%
+      </span>
+
+      {/* MA30 */}
+      <span className="shrink-0 text-[#3a3a5c]">
+        MA30 ${btc.ma30.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+      </span>
+
+      {/* Binance attribution */}
+      {isLive && (
+        <span className="shrink-0 text-[#2a2a4c] ml-auto">
+          via Binance SPOT
+        </span>
+      )}
+    </div>
+  )
+}
+
 // ─── ASCII Logo (hidden on smallest screens, replaced with text mark) ─────────
 
 function ClawLogo() {
@@ -189,6 +240,9 @@ export function ArenaHeader() {
         </div>
 
         <div className="h-px w-full bg-gradient-to-r from-transparent via-[#00ff41]/10 to-transparent" />
+
+        {/* Live BTC ticker strip */}
+        <BtcTicker />
       </header>
     </>
   )

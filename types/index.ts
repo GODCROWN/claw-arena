@@ -175,9 +175,10 @@ export interface GameState {
   // Thought Stream
   thoughts: ThoughtEntry[]
 
-  // Market Data (simulated)
+  // Market Data (BTC live via Binance; others simulated)
   marketAssets: MarketAsset[]
   startedAt: number
+  btcLiveAt: number | null  // timestamp of last successful Binance fetch
 
   // Actions
   setWallet: (address: string) => void
@@ -194,6 +195,8 @@ export interface GameState {
   calculateKellySize: (w: number, r: number) => KellyResult
   updateMarketPrices: () => void
   updateEquityHistory: () => void
+  /** Replace BTC market asset with live Binance data */
+  setBtcMarketData: (price: number, ma30: number, priceHistory: number[], change24h: number) => void
 }
 
 // ─── OpenClaw / Skill File ────────────────────────────────────────────────────
