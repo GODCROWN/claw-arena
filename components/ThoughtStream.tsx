@@ -96,15 +96,15 @@ export function ThoughtStream() {
   return (
     <div className="bg-[#0a0a0f] border border-[#1a1a2e] flex flex-col h-[380px]">
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-[#1a1a2e] shrink-0">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-[#1a1a2e] shrink-0 gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <Terminal size={12} className="text-[#00d4ff]" />
           <span className="text-[9px] text-[#e0e0ff] uppercase tracking-widest font-bold">
             Thought Stream
           </span>
           <div className="w-1.5 h-1.5 rounded-full bg-[#00ff41] animate-pulse" />
         </div>
-        <div className="flex gap-3 text-[9px] text-[#3a3a5c]">
+        <div className="flex flex-wrap justify-end gap-x-2 gap-y-0.5 text-[9px] text-[#3a3a5c]">
           <span>
             <span className="text-[#00ff41]">{tradeCount}</span> trades
           </span>
@@ -113,7 +113,7 @@ export function ThoughtStream() {
               <span className="text-[#ffd700]">{warnCount}</span> alerts
             </span>
           )}
-          <span>{thoughts.length}/200 entries</span>
+          <span className="hidden sm:inline">{thoughts.length}/200 entries</span>
         </div>
       </div>
 

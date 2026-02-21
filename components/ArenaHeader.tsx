@@ -6,23 +6,23 @@ import { useEffect } from 'react'
 import { useGameStore, computeEquity, computePnLPercent } from '@/store/useGameStore'
 import { Activity, Skull, Zap } from 'lucide-react'
 
-// ─── ASCII Logo ───────────────────────────────────────────────────────────────
+// ─── ASCII Logo (hidden on smallest screens, replaced with text mark) ─────────
 
 function ClawLogo() {
   return (
-    <div className="flex flex-col leading-none select-none">
-      <span className="text-[10px] text-[#00ff41] font-bold tracking-[0.3em] glow-green">
-        ╔═╗╦  ╔═╗╦ ╦
-      </span>
-      <span className="text-[10px] text-[#00ff41] font-bold tracking-[0.3em] glow-green">
-        ║  ║  ╠═╣║║║
-      </span>
-      <span className="text-[10px] text-[#00ff41] font-bold tracking-[0.3em] glow-green">
-        ╚═╝╩═╝╩ ╩╚╩╝
-      </span>
-      <span className="text-[8px] text-[#3a3a5c] tracking-[0.5em] mt-0.5">
-        ARENA v0.1
-      </span>
+    <div className="flex flex-col leading-none select-none shrink-0">
+      {/* Full ASCII art on md+ */}
+      <div className="hidden md:flex flex-col">
+        <span className="text-[10px] text-[#00ff41] font-bold tracking-[0.3em] glow-green">╔═╗╦  ╔═╗╦ ╦</span>
+        <span className="text-[10px] text-[#00ff41] font-bold tracking-[0.3em] glow-green">║  ║  ╠═╣║║║</span>
+        <span className="text-[10px] text-[#00ff41] font-bold tracking-[0.3em] glow-green">╚═╝╩═╝╩ ╩╚╩╝</span>
+        <span className="text-[8px] text-[#3a3a5c] tracking-[0.5em] mt-0.5">ARENA v0.1</span>
+      </div>
+      {/* Compact wordmark on mobile */}
+      <div className="flex md:hidden flex-col">
+        <span className="text-sm font-bold text-[#00ff41] tracking-widest glow-green">⬡ CLAW</span>
+        <span className="text-[9px] text-[#3a3a5c] tracking-widest">ARENA</span>
+      </div>
     </div>
   )
 }
@@ -49,11 +49,12 @@ function BalanceDisplay() {
   const pnlColor = pnlPct >= 0 ? 'text-[#00ff41]' : 'text-[#ff3333]'
 
   return (
-    <div className="flex flex-col items-center gap-0.5">
-      <div className="flex items-center gap-2">
-        <Activity size={12} className="text-[#3a3a5c]" />
-        <span className="text-[10px] text-[#5a5a8a] tracking-widest uppercase">
-          Virtual Equity
+    <div className="flex flex-col items-center gap-0.5 min-w-0">
+      {/* Label row — hidden on very small screens */}
+      <div className="hidden sm:flex items-center gap-2">
+        <Activity size={10} className="text-[#3a3a5c]" />
+        <span className="text-[9px] text-[#5a5a8a] tracking-widest uppercase">
+          Equity
         </span>
         {isDanger && (
           <span className="text-[9px] text-[#ff3333] liquidation-blink font-bold">
@@ -61,17 +62,24 @@ function BalanceDisplay() {
           </span>
         )}
       </div>
-      <div className={`text-xl font-bold tabular-nums tracking-tight ${equityColor}`}>
+
+      {/* Equity value */}
+      <div className={`text-base sm:text-xl font-bold tabular-nums tracking-tight truncate ${equityColor}`}>
         ${equity.toLocaleString('en-US', { maximumFractionDigits: 0 })}
       </div>
-      <div className="flex items-center gap-3">
-        <span className={`text-xs font-medium tabular-nums ${pnlColor}`}>
+
+      {/* PnL + restarts */}
+      <div className="flex items-center gap-2">
+        {isDanger && (
+          <span className="sm:hidden text-[9px] text-[#ff3333] liquidation-blink font-bold">⚠</span>
+        )}
+        <span className={`text-[10px] sm:text-xs font-medium tabular-nums ${pnlColor}`}>
           {pnlPct >= 0 ? '+' : ''}{pnlPct.toFixed(2)}%
         </span>
         {restartCount > 0 && (
-          <div className="flex items-center gap-1">
-            <Skull size={10} className="text-[#ff3333]" />
-            <span className="text-[10px] text-[#ff3333]">×{restartCount}</span>
+          <div className="flex items-center gap-0.5">
+            <Skull size={9} className="text-[#ff3333]" />
+            <span className="text-[9px] text-[#ff3333]">×{restartCount}</span>
           </div>
         )}
       </div>
@@ -94,13 +102,19 @@ function BotStyleBadge() {
   }[activeBotType]
 
   const botLabel = {
+    martingale: 'MTG',        // Abbreviated for mobile
+    ai: 'AI',
+    openclaw: 'OCL',
+  }[activeBotType]
+
+  const botLabelFull = {
     martingale: 'MARTINGALE',
     ai: 'AI BOT',
     openclaw: 'OPENCLAW',
   }[activeBotType]
 
   return (
-    <div className="flex flex-col items-end gap-1">
+    <div className="hidden sm:flex flex-col items-end gap-1 shrink-0">
       <div className="flex items-center gap-1.5">
         {!walletAddress && (
           <span className="text-[8px] text-[#3a3a5c] border border-[#3a3a5c]/30 px-1 py-0.5 uppercase tracking-widest">
@@ -109,14 +123,16 @@ function BotStyleBadge() {
         )}
         <div className={`px-2 py-0.5 border text-[9px] font-bold tracking-widest uppercase ${botTypeColor}`}>
           <Zap size={8} className="inline mr-1" />
-          {botLabel}
+          {/* Short label on sm, full on md+ */}
+          <span className="sm:hidden">{botLabel}</span>
+          <span className="hidden sm:inline">{botLabelFull}</span>
         </div>
       </div>
-      <div className="text-[10px] text-[#5a5a8a] text-right max-w-[160px] truncate">
+      <div className="text-[9px] text-[#5a5a8a] text-right max-w-[100px] md:max-w-[160px] truncate">
         {styleSummary}
       </div>
       {lastTickAt && (
-        <div className="text-[9px] text-[#3a3a5c]">
+        <div className="hidden md:block text-[9px] text-[#3a3a5c]">
           Last tick: {new Date(lastTickAt).toLocaleTimeString()}
         </div>
       )}
@@ -126,8 +142,6 @@ function BotStyleBadge() {
 
 // ─── Wallet Sync ──────────────────────────────────────────────────────────────
 
-// Syncs the wagmi wallet connection state into the game store.
-// Wallet is optional — guests can trade without connecting.
 function WalletSync() {
   const { address, isConnected } = useAccount()
   const setWallet = useGameStore((s) => s.setWallet)
@@ -136,10 +150,8 @@ function WalletSync() {
 
   useEffect(() => {
     if (isConnected && address && address !== walletAddress) {
-      // Upgrade guest session → ranked session
       setWallet(address)
     } else if (!isConnected && walletAddress) {
-      // Downgrade back to guest; ticking continues uninterrupted
       clearWallet()
     }
   }, [isConnected, address, walletAddress, setWallet, clearWallet])
@@ -154,18 +166,17 @@ export function ArenaHeader() {
     <>
       <WalletSync />
       <header className="sticky top-0 z-50 border-b border-[#1a1a2e] bg-[#0a0a0f]/95 backdrop-blur-sm">
-        {/* Top scan line effect */}
         <div className="h-px w-full bg-gradient-to-r from-transparent via-[#00ff41]/30 to-transparent" />
 
-        <div className="flex items-center justify-between px-4 py-3 md:px-6">
+        <div className="flex items-center justify-between gap-2 px-3 py-2 sm:px-4 sm:py-3 md:px-6">
           {/* Logo */}
           <ClawLogo />
 
-          {/* Balance */}
+          {/* Balance — always visible, centered */}
           <BalanceDisplay />
 
           {/* Right: Bot badge + Connect */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
             <BotStyleBadge />
             <div className="border border-[#1a1a2e]">
               <ConnectButton
@@ -177,7 +188,6 @@ export function ArenaHeader() {
           </div>
         </div>
 
-        {/* Bottom scan line */}
         <div className="h-px w-full bg-gradient-to-r from-transparent via-[#00ff41]/10 to-transparent" />
       </header>
     </>

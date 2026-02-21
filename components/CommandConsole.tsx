@@ -130,16 +130,17 @@ export function CommandConsole() {
           <p className="text-[8px] text-[#3a3a5c] uppercase tracking-widest mb-1">
             Active Rules ({customInstructions.length})
           </p>
-          <div className="flex flex-wrap gap-1 max-h-16 overflow-y-auto">
+          <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto">
             {customInstructions.map((rule, idx) => (
               <div
                 key={idx}
-                className="flex items-center gap-1 bg-[#0f0f1a] border border-[#1a1a2e] px-2 py-0.5 text-[9px] text-[#00d4ff] group"
+                className="flex items-center gap-1 bg-[#0f0f1a] border border-[#1a1a2e] px-2 py-1 text-[9px] text-[#00d4ff] group"
               >
-                <span className="max-w-[180px] truncate">{rule}</span>
+                <span className="max-w-[120px] sm:max-w-[180px] truncate">{rule}</span>
                 <button
                   onClick={() => removeInstruction(idx)}
-                  className="text-[#3a3a5c] hover:text-[#ff3333] transition-colors opacity-0 group-hover:opacity-100"
+                  className="p-1 -m-1 text-[#3a3a5c] hover:text-[#ff3333] transition-colors opacity-60 sm:opacity-0 group-hover:opacity-100"
+                  aria-label="Remove rule"
                 >
                   <X size={8} />
                 </button>
@@ -183,12 +184,12 @@ export function CommandConsole() {
       </form>
 
       {/* Help hint */}
-      <div className="px-3 pb-2 flex gap-4 text-[8px] text-[#2a2a4c]">
-        <span>↑↓ history</span>
+      <div className="px-3 pb-2 flex flex-wrap gap-x-3 gap-y-0.5 text-[8px] text-[#2a2a4c]">
+        <span className="hidden sm:inline">↑↓ history</span>
         <span>Enter to add rule</span>
         {walletAddress
-          ? <span>AI acknowledgment enabled</span>
-          : <span className="text-[#3a3a5c]">Connect wallet for AI acknowledgment</span>
+          ? <span className="text-[#2a2a4c]">AI enabled</span>
+          : <span className="text-[#3a3a5c]">Connect wallet for AI</span>
         }
       </div>
     </div>

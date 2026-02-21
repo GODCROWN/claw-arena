@@ -41,7 +41,7 @@ function BotCard({
   return (
     <button
       onClick={onSelect}
-      className={`w-full text-left p-3 border transition-all ${
+      className={`w-full text-left p-3 min-h-[52px] border transition-all ${
         active
           ? activeColors[type]
           : 'border-[#1a1a2e] text-[#5a5a8a] hover:border-[#3a3a5c] hover:text-[#e0e0ff]'
@@ -192,7 +192,8 @@ The platform sends POST body:
             </code>
             <button
               onClick={handleCopyToken}
-              className="text-[#3a3a5c] hover:text-[#a855f7] transition-colors shrink-0"
+              className="p-2 -m-2 text-[#3a3a5c] hover:text-[#a855f7] transition-colors shrink-0"
+              aria-label="Copy token"
             >
               {copied ? <Check size={10} className="text-[#00ff41]" /> : <Copy size={10} />}
             </button>
@@ -201,7 +202,7 @@ The platform sends POST body:
 
         <button
           onClick={handleDownload}
-          className="w-full flex items-center justify-center gap-2 py-1.5 border border-[#a855f7]/30 text-[#a855f7] hover:bg-[#a855f7]/10 transition-colors text-[9px] uppercase tracking-widest"
+          className="w-full flex items-center justify-center gap-2 py-2.5 sm:py-1.5 border border-[#a855f7]/30 text-[#a855f7] hover:bg-[#a855f7]/10 transition-colors text-[9px] uppercase tracking-widest min-h-[44px] sm:min-h-0"
         >
           <Download size={10} />
           Download CLAW_SKILL.md

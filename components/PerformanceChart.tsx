@@ -148,8 +148,8 @@ export function PerformanceChart() {
 
   return (
     <div className="bg-[#0f0f1a] border border-[#1a1a2e] p-4">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
+      {/* Header — stacks on mobile, side-by-side on md+ */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-3">
         <div>
           <h2 className="text-xs font-bold text-[#e0e0ff] tracking-widest uppercase">
             Performance Chart
@@ -159,15 +159,16 @@ export function PerformanceChart() {
           </p>
         </div>
 
-        <div className="flex gap-6">
+        {/* Stats: 3 across on sm+, scrollable on xs */}
+        <div className="flex gap-3 sm:gap-6 overflow-x-auto pb-1 md:pb-0">
           <StatBadge
-            label="Current Equity"
+            label="Equity"
             value={`$${currentEquity.toLocaleString('en-US', { maximumFractionDigits: 0 })}`}
             color={currentEquity >= 100_000 ? 'text-[#00ff41]' : 'text-[#ff3333]'}
           />
           <StatBadge
-            label="Total PnL"
-            value={`${pnl >= 0 ? '+' : ''}$${pnl.toLocaleString('en-US', { maximumFractionDigits: 0 })}`}
+            label="PnL"
+            value={`${pnl >= 0 ? '+' : ''}$${Math.abs(pnl).toLocaleString('en-US', { maximumFractionDigits: 0 })}`}
             color={pnl >= 0 ? 'text-[#00ff41]' : 'text-[#ff3333]'}
           />
           <StatBadge
@@ -179,19 +180,19 @@ export function PerformanceChart() {
       </div>
 
       {/* Legend */}
-      <div className="flex gap-4 mb-3">
+      <div className="flex flex-wrap gap-2 sm:gap-4 mb-3">
         <div className="flex items-center gap-1.5">
           <div className="w-4 h-px bg-[#00ff41]" />
           <span className="text-[9px] text-[#5a5a8a]">Your Bot</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="w-4 h-px bg-[#ff6b00]" style={{ borderTop: '1px dashed' }} />
+          <div className="w-4 h-px bg-[#ff6b00]" />
           <span className="text-[9px] text-[#5a5a8a]">Global #1</span>
         </div>
       </div>
 
-      {/* Chart */}
-      <div className="h-52">
+      {/* Chart — shorter on mobile */}
+      <div className="h-40 sm:h-52">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: 8 }}>
             <CartesianGrid

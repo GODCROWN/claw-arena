@@ -23,7 +23,7 @@ export default function ArenaPage() {
       <ArenaHeader />
 
       {/* Main layout */}
-      <main className="flex-1 container mx-auto px-3 py-4 max-w-[1400px]">
+      <main className="flex-1 container mx-auto px-2 sm:px-3 py-3 sm:py-4 max-w-[1400px]">
         {/* Welcome banner — shown to disconnected users */}
         <WelcomeBanner />
 
@@ -64,7 +64,7 @@ export default function ArenaPage() {
 
       {/* Footer */}
       <footer className="border-t border-[#1a1a2e] py-3 px-4 text-center">
-        <p className="text-[9px] text-[#2a2a4c] tracking-widest uppercase">
+        <p className="text-[8px] sm:text-[9px] text-[#2a2a4c] tracking-widest uppercase">
           ClawArena — Paper Trading Only — Not Financial Advice — All positions are virtual
         </p>
       </footer>

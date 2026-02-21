@@ -61,7 +61,7 @@ export function PositionsPanel() {
               return (
                 <div
                   key={pos.id}
-                  className="flex items-center justify-between bg-[#0a0a0f] border border-[#1a1a2e] px-2 py-1.5 text-[10px]"
+                  className="flex flex-col xs:flex-row xs:items-center justify-between bg-[#0a0a0f] border border-[#1a1a2e] px-2 py-2 text-[10px] gap-1"
                 >
                   <div className="flex items-center gap-2">
                     {pos.unrealizedPnL >= 0 ? (
@@ -70,11 +70,11 @@ export function PositionsPanel() {
                       <TrendingDown size={10} className="text-[#ff3333]" />
                     )}
                     <span className="font-bold text-[#e0e0ff]">{pos.asset}</span>
-                    <span className="text-[#3a3a5c]">
+                    <span className="text-[#3a3a5c] truncate">
                       {pos.quantity.toFixed(4)} @ ${pos.entryPrice.toFixed(2)}
                     </span>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 pl-5 xs:pl-0">
                     <span className="text-[#5a5a8a] tabular-nums">
                       ${pos.currentPrice.toFixed(2)}
                     </span>
@@ -111,7 +111,7 @@ export function PositionsPanel() {
               return (
                 <div
                   key={trade.id}
-                  className="flex items-center justify-between text-[9px] py-0.5 px-1 hover:bg-[#0a0a0f] transition-colors"
+                  className="flex items-center justify-between text-[9px] py-1.5 sm:py-0.5 px-1 hover:bg-[#0a0a0f] transition-colors"
                 >
                   <div className="flex items-center gap-2">
                     <Clock size={8} className="text-[#3a3a5c] shrink-0" />

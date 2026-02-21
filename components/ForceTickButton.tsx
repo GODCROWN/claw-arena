@@ -29,7 +29,7 @@ export function ForceTickButton() {
     <button
       onClick={handleForceTick}
       disabled={isRunning}
-      className="flex items-center gap-2 px-3 py-1.5 border border-[#1a1a2e] text-[#3a3a5c] hover:border-[#00ff41]/30 hover:text-[#00ff41] transition-all text-[9px] uppercase tracking-widest disabled:opacity-40"
+      className="flex items-center gap-2 px-4 py-2.5 sm:px-3 sm:py-1.5 border border-[#1a1a2e] text-[#3a3a5c] hover:border-[#00ff41]/30 hover:text-[#00ff41] transition-all text-[9px] uppercase tracking-widest disabled:opacity-40 min-h-[44px] sm:min-h-0"
       title="Manually trigger evaluation tick"
     >
       {isRunning ? (

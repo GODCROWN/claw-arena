@@ -49,53 +49,53 @@ function LeaderboardRow({
       className={`text-xs border-b border-[#1a1a2e] transition-colors ${rowBg}`}
     >
       {/* Rank */}
-      <td className="px-3 py-2 text-center">
+      <td className="px-1.5 sm:px-3 py-1 sm:py-2 text-center">
         <RankBadge rank={entry.rank} />
       </td>
 
       {/* Wallet */}
-      <td className="px-3 py-2">
-        <div className="flex items-center gap-2">
+      <td className="px-1.5 sm:px-3 py-1 sm:py-2">
+        <div className="flex items-center gap-1 sm:gap-2">
           {isCurrentUser && (
-            <span className="text-[8px] text-[#00ff41] border border-[#00ff41]/30 px-1 py-0.5">
+            <span className="text-[8px] text-[#00ff41] border border-[#00ff41]/30 px-1 py-0.5 shrink-0">
               YOU
             </span>
           )}
-          <span className={isCurrentUser ? 'text-[#00ff41]' : 'text-[#e0e0ff]'}>
+          <span className={`truncate max-w-[80px] sm:max-w-none ${isCurrentUser ? 'text-[#00ff41]' : 'text-[#e0e0ff]'}`}>
             {entry.ensName ?? truncateAddress(entry.walletAddress)}
           </span>
         </div>
       </td>
 
-      {/* PnL $ */}
-      <td className={`px-3 py-2 tabular-nums text-right ${pnlColor}`}>
+      {/* PnL $ — hidden on mobile */}
+      <td className={`hidden sm:table-cell px-1.5 sm:px-3 py-1 sm:py-2 tabular-nums text-right ${pnlColor}`}>
         {entry.pnlDollar >= 0 ? '+' : ''}
         ${Math.abs(entry.pnlDollar).toLocaleString('en-US', { maximumFractionDigits: 0 })}
       </td>
 
-      {/* PnL % */}
-      <td className={`px-3 py-2 tabular-nums text-right font-bold ${pnlColor}`}>
+      {/* PnL % — always visible */}
+      <td className={`px-1.5 sm:px-3 py-1 sm:py-2 tabular-nums text-right font-bold ${pnlColor}`}>
         {entry.pnlPercent >= 0 ? '+' : ''}
         {entry.pnlPercent.toFixed(2)}%
       </td>
 
-      {/* Days Live */}
-      <td className="px-3 py-2 tabular-nums text-right text-[#5a5a8a]">
+      {/* Days Live — hidden on mobile */}
+      <td className="hidden sm:table-cell px-1.5 sm:px-3 py-1 sm:py-2 tabular-nums text-right text-[#5a5a8a]">
         {entry.daysLive}d
       </td>
 
-      {/* Volume */}
-      <td className="px-3 py-2 tabular-nums text-right text-[#5a5a8a]">
+      {/* Volume — hidden on mobile */}
+      <td className="hidden sm:table-cell px-1.5 sm:px-3 py-1 sm:py-2 tabular-nums text-right text-[#5a5a8a]">
         ${(entry.totalVolume / 1000).toFixed(0)}k
       </td>
 
-      {/* Style */}
-      <td className="px-3 py-2 text-[#00d4ff] max-w-[140px] truncate">
+      {/* Style — hidden on mobile */}
+      <td className="hidden md:table-cell px-1.5 sm:px-3 py-1 sm:py-2 text-[#00d4ff] max-w-[140px] truncate">
         {entry.styleSummary}
       </td>
 
-      {/* Restarts */}
-      <td className="px-3 py-2 text-center">
+      {/* Restarts — hidden on mobile */}
+      <td className="hidden sm:table-cell px-1.5 sm:px-3 py-1 sm:py-2 text-center">
         {entry.restartCount > 0 ? (
           <div className="flex items-center justify-center gap-1">
             <Skull size={10} className="text-[#ff3333]" />
@@ -186,7 +186,7 @@ export function Leaderboard() {
   return (
     <div className="bg-[#0f0f1a] border border-[#1a1a2e]">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-[#1a1a2e]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between px-3 sm:px-4 py-2 sm:py-3 gap-1 sm:gap-0 border-b border-[#1a1a2e]">
         <div className="flex items-center gap-2">
           <Trophy size={14} className="text-[#ffd700]" />
           <h2 className="text-xs font-bold text-[#e0e0ff] tracking-widest uppercase">
@@ -202,7 +202,7 @@ export function Leaderboard() {
           <button
             onClick={fetchLeaderboard}
             disabled={isLoading}
-            className="text-[#3a3a5c] hover:text-[#00ff41] transition-colors disabled:opacity-50"
+            className="p-2 -m-2 text-[#3a3a5c] hover:text-[#00ff41] transition-colors disabled:opacity-50"
             title="Refresh leaderboard"
           >
             <RefreshCw size={12} className={isLoading ? 'animate-spin' : ''} />
@@ -218,17 +218,17 @@ export function Leaderboard() {
 
       {/* Table */}
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[640px]">
+        <table className="w-full">
           <thead>
             <tr className="text-[9px] text-[#3a3a5c] uppercase tracking-widest border-b border-[#1a1a2e]">
-              <th className="px-3 py-2 text-center font-normal w-8">#</th>
-              <th className="px-3 py-2 text-left font-normal">Wallet</th>
-              <th className="px-3 py-2 text-right font-normal">PnL $</th>
-              <th className="px-3 py-2 text-right font-normal">PnL %</th>
-              <th className="px-3 py-2 text-right font-normal">Days</th>
-              <th className="px-3 py-2 text-right font-normal">Volume</th>
-              <th className="px-3 py-2 text-left font-normal">Style</th>
-              <th className="px-3 py-2 text-center font-normal">
+              <th className="px-1.5 sm:px-3 py-1 sm:py-2 text-center font-normal w-8">#</th>
+              <th className="px-1.5 sm:px-3 py-1 sm:py-2 text-left font-normal">Wallet</th>
+              <th className="hidden sm:table-cell px-1.5 sm:px-3 py-1 sm:py-2 text-right font-normal">PnL $</th>
+              <th className="px-1.5 sm:px-3 py-1 sm:py-2 text-right font-normal">PnL %</th>
+              <th className="hidden sm:table-cell px-1.5 sm:px-3 py-1 sm:py-2 text-right font-normal">Days</th>
+              <th className="hidden sm:table-cell px-1.5 sm:px-3 py-1 sm:py-2 text-right font-normal">Volume</th>
+              <th className="hidden md:table-cell px-1.5 sm:px-3 py-1 sm:py-2 text-left font-normal">Style</th>
+              <th className="hidden sm:table-cell px-1.5 sm:px-3 py-1 sm:py-2 text-center font-normal">
                 <Skull size={10} className="inline" />
               </th>
             </tr>
