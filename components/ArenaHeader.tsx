@@ -85,6 +85,7 @@ function BotStyleBadge() {
   const styleSummary = useGameStore((s) => s.styleSummary)
   const activeBotType = useGameStore((s) => s.activeBotType)
   const lastTickAt = useGameStore((s) => s.lastTickAt)
+  const walletAddress = useGameStore((s) => s.walletAddress)
 
   const botTypeColor = {
     martingale: 'text-[#ffd700] border-[#ffd700]/30 bg-[#ffd700]/5',
@@ -100,9 +101,16 @@ function BotStyleBadge() {
 
   return (
     <div className="flex flex-col items-end gap-1">
-      <div className={`px-2 py-0.5 border text-[9px] font-bold tracking-widest uppercase ${botTypeColor}`}>
-        <Zap size={8} className="inline mr-1" />
-        {botLabel}
+      <div className="flex items-center gap-1.5">
+        {!walletAddress && (
+          <span className="text-[8px] text-[#3a3a5c] border border-[#3a3a5c]/30 px-1 py-0.5 uppercase tracking-widest">
+            GUEST
+          </span>
+        )}
+        <div className={`px-2 py-0.5 border text-[9px] font-bold tracking-widest uppercase ${botTypeColor}`}>
+          <Zap size={8} className="inline mr-1" />
+          {botLabel}
+        </div>
       </div>
       <div className="text-[10px] text-[#5a5a8a] text-right max-w-[160px] truncate">
         {styleSummary}
@@ -118,21 +126,23 @@ function BotStyleBadge() {
 
 // ─── Wallet Sync ──────────────────────────────────────────────────────────────
 
+// Syncs the wagmi wallet connection state into the game store.
+// Wallet is optional — guests can trade without connecting.
 function WalletSync() {
   const { address, isConnected } = useAccount()
   const setWallet = useGameStore((s) => s.setWallet)
   const clearWallet = useGameStore((s) => s.clearWallet)
-  const startTick = useGameStore((s) => s.startTick)
   const walletAddress = useGameStore((s) => s.walletAddress)
 
   useEffect(() => {
     if (isConnected && address && address !== walletAddress) {
+      // Upgrade guest session → ranked session
       setWallet(address)
-      startTick()
     } else if (!isConnected && walletAddress) {
+      // Downgrade back to guest; ticking continues uninterrupted
       clearWallet()
     }
-  }, [isConnected, address, walletAddress, setWallet, clearWallet, startTick])
+  }, [isConnected, address, walletAddress, setWallet, clearWallet])
 
   return null
 }

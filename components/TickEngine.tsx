@@ -2,18 +2,16 @@
 
 /**
  * TickEngine — invisible client component that manages:
- * 1. Market price simulation (every 30 seconds for realistic UX)
- * 2. Manual "force tick" button for dev/demo purposes
- * 3. Auto-submits user stats to leaderboard on each tick
+ * 1. Market price simulation (every 30 seconds for live-feel UI)
+ * 2. Evaluation tick every 15 minutes — runs for ALL users, wallet optional
+ * 3. Auto-submits stats to leaderboard only when a wallet is connected
  */
 
 import { useEffect, useCallback } from 'react'
 import { useGameStore, computeTotalVolume, computePnLDollar, computePnLPercent } from '@/store/useGameStore'
-import { useAccount } from 'wagmi'
 import { runEvaluationTick } from '@/lib/engine'
 
 export function TickEngine() {
-  const { isConnected } = useAccount()
   const walletAddress = useGameStore((s) => s.walletAddress)
   const updateMarketPrices = useGameStore((s) => s.updateMarketPrices)
   const startedAt = useGameStore((s) => s.startedAt)
@@ -24,9 +22,9 @@ export function TickEngine() {
   const restartCount = useGameStore((s) => s.restartCount)
   const equityHistory = useGameStore((s) => s.equityHistory)
 
-  // Submit leaderboard entry
+  // Submit leaderboard entry — only when a real wallet is connected
   const submitToLeaderboard = useCallback(async () => {
-    if (!walletAddress || !startedAt) return
+    if (!walletAddress) return // guests are unranked
 
     const pnlDollar = computePnLDollar(balance, openPositions)
     const pnlPercent = computePnLPercent(balance, openPositions)
@@ -53,7 +51,7 @@ export function TickEngine() {
     }
   }, [walletAddress, balance, openPositions, tradeHistory, styleSummary, restartCount, equityHistory, startedAt])
 
-  // Market price simulation — runs every 30s for live-feel UI
+  // Market price simulation — runs every 30s regardless of wallet status
   useEffect(() => {
     const priceInterval = setInterval(() => {
       updateMarketPrices()
@@ -62,25 +60,22 @@ export function TickEngine() {
     return () => clearInterval(priceInterval)
   }, [updateMarketPrices])
 
-  // Evaluation tick — runs every 15 minutes
+  // Evaluation tick — runs every 15 minutes for ALL users (wallet optional)
   useEffect(() => {
-    if (!isConnected || !walletAddress) return
-
     const tickInterval = setInterval(async () => {
       await runEvaluationTick()
-      await submitToLeaderboard()
+      await submitToLeaderboard() // no-op for guests
     }, 15 * 60 * 1000)
 
     return () => clearInterval(tickInterval)
-  }, [isConnected, walletAddress, submitToLeaderboard])
+  }, [submitToLeaderboard])
 
-  // Submit leaderboard on first connect
+  // Submit leaderboard when wallet first connects (or changes)
   useEffect(() => {
-    if (walletAddress && startedAt) {
+    if (walletAddress) {
       submitToLeaderboard()
     }
-  }, [walletAddress, startedAt, submitToLeaderboard])
+  }, [walletAddress, submitToLeaderboard])
 
-  // This component renders nothing — pure side-effect logic
   return null
 }

@@ -1,83 +1,54 @@
 'use client'
 
+import { useState } from 'react'
 import { useAccount } from 'wagmi'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
-import { Shield, Zap, TrendingUp } from 'lucide-react'
+import { X, Trophy, Zap } from 'lucide-react'
 
+/**
+ * WelcomeBanner — compact dismissible callout for guests.
+ * Does NOT block the trading UI. Disappears once wallet connects or is dismissed.
+ */
 export function WelcomeBanner() {
   const { isConnected } = useAccount()
+  const [dismissed, setDismissed] = useState(false)
 
-  if (isConnected) return null
+  // Hide once wallet is connected or manually dismissed
+  if (isConnected || dismissed) return null
 
   return (
-    <div className="mb-6 border border-[#00ff41]/20 bg-[#00ff41]/5 p-6">
-      {/* ASCII header */}
-      <div className="text-center mb-6">
-        <pre className="text-[#00ff41] text-[10px] leading-tight glow-green inline-block">
-{`
- ██████╗██╗      █████╗ ██╗    ██╗     █████╗ ██████╗ ███████╗███╗   ██╗ █████╗
-██╔════╝██║     ██╔══██╗██║    ██║    ██╔══██╗██╔══██╗██╔════╝████╗  ██║██╔══██╗
-██║     ██║     ███████║██║ █╗ ██║    ███████║██████╔╝█████╗  ██╔██╗ ██║███████║
-██║     ██║     ██╔══██║██║███╗██║    ██╔══██║██╔══██╗██╔══╝  ██║╚██╗██║██╔══██║
-╚██████╗███████╗██║  ██║╚███╔███╔╝    ██║  ██║██║  ██║███████╗██║ ╚████║██║  ██║
- ╚═════╝╚══════╝╚═╝  ╚═╝ ╚══╝╚══╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═══╝╚═╝  ╚═╝
-`}
-        </pre>
-        <p className="text-[#5a5a8a] text-xs tracking-widest mt-2">
-          AI PAPER TRADING COMPETITION PLATFORM
-        </p>
-      </div>
+    <div className="mb-4 border border-[#00ff41]/20 bg-[#00ff41]/5 px-4 py-3 flex items-center justify-between gap-4 flex-wrap">
+      <div className="flex items-center gap-4 flex-wrap">
+        {/* Logo text */}
+        <span className="text-[#00ff41] font-bold text-sm tracking-widest glow-green hidden sm:block">
+          ⬡ CLAWARENA
+        </span>
 
-      {/* Feature grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="flex items-start gap-3 p-3 border border-[#1a1a2e] bg-[#0a0a0f]">
-          <Zap size={16} className="text-[#ffd700] shrink-0 mt-0.5" />
-          <div>
-            <p className="text-[10px] font-bold text-[#ffd700] uppercase tracking-widest mb-1">
-              Deploy Your Bot
-            </p>
-            <p className="text-[9px] text-[#5a5a8a] leading-relaxed">
-              Connect your EVM wallet and deploy a Martingale, AI, or self-hosted LLM bot to trade a virtual $100,000 portfolio.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-start gap-3 p-3 border border-[#1a1a2e] bg-[#0a0a0f]">
-          <TrendingUp size={16} className="text-[#00d4ff] shrink-0 mt-0.5" />
-          <div>
-            <p className="text-[10px] font-bold text-[#00d4ff] uppercase tracking-widest mb-1">
-              Kelly Criterion
-            </p>
-            <p className="text-[9px] text-[#5a5a8a] leading-relaxed">
-              All position sizes are calculated using Quarter-Kelly for optimal risk management. Every decision is logged to the thought stream.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-start gap-3 p-3 border border-[#1a1a2e] bg-[#0a0a0f]">
-          <Shield size={16} className="text-[#00ff41] shrink-0 mt-0.5" />
-          <div>
-            <p className="text-[10px] font-bold text-[#00ff41] uppercase tracking-widest mb-1">
-              10% Liquidation Rule
-            </p>
-            <p className="text-[9px] text-[#5a5a8a] leading-relaxed">
-              If equity drops below $90,000, your portfolio is liquidated and reset. Survive and climb the global leaderboard.
-            </p>
-          </div>
+        {/* Quick facts */}
+        <div className="flex items-center gap-3 text-[9px] text-[#5a5a8a]">
+          <span className="flex items-center gap-1">
+            <Zap size={9} className="text-[#ffd700]" />
+            $100k virtual portfolio
+          </span>
+          <span className="text-[#1a1a2e]">|</span>
+          <span className="flex items-center gap-1">
+            <Trophy size={9} className="text-[#00d4ff]" />
+            Connect wallet to join global leaderboard
+          </span>
         </div>
       </div>
 
-      {/* CTA */}
-      <div className="flex flex-col items-center gap-3">
-        <p className="text-[9px] text-[#3a3a5c] uppercase tracking-widest">
-          Connect an EVM wallet to enter the arena
-        </p>
-        <div className="border border-[#00ff41]/30">
-          <ConnectButton label="Connect Wallet → Enter Arena" />
+      <div className="flex items-center gap-3">
+        <div className="border border-[#00ff41]/30 text-[10px]">
+          <ConnectButton label="Connect to Rank" showBalance={false} />
         </div>
-        <p className="text-[8px] text-[#2a2a4c]">
-          Supports Ethereum Mainnet, Base, and Arbitrum · Paper trading only — no real funds
-        </p>
+        <button
+          onClick={() => setDismissed(true)}
+          className="text-[#3a3a5c] hover:text-[#5a5a8a] transition-colors shrink-0"
+          title="Dismiss — you can still trade as a guest"
+        >
+          <X size={12} />
+        </button>
       </div>
     </div>
   )

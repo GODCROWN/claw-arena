@@ -152,7 +152,8 @@ export interface LeaderboardResponse {
 
 export interface GameState {
   // Wallet
-  walletAddress: string | null
+  walletAddress: string | null  // null = guest (unranked)
+  guestId: string               // stable ID for guest session persistence
 
   // Financials
   balance: number
@@ -176,7 +177,7 @@ export interface GameState {
 
   // Market Data (simulated)
   marketAssets: MarketAsset[]
-  startedAt: number | null
+  startedAt: number
 
   // Actions
   setWallet: (address: string) => void

@@ -271,7 +271,6 @@ function MarketOverview() {
 export function BotSelector() {
   const activeBotType = useGameStore((s) => s.activeBotType)
   const setBotType = useGameStore((s) => s.setBotType)
-  const walletAddress = useGameStore((s) => s.walletAddress)
 
   return (
     <div className="bg-[#0f0f1a] border border-[#1a1a2e] p-4">
@@ -312,12 +311,6 @@ export function BotSelector() {
       </div>
 
       {activeBotType === 'openclaw' && <OpenClawPanel />}
-
-      {!walletAddress && (
-        <div className="mt-3 p-2 border border-[#ffd700]/20 bg-[#ffd700]/5 text-[9px] text-[#ffd700] text-center">
-          Connect wallet to activate bot
-        </div>
-      )}
 
       <MarketOverview />
     </div>

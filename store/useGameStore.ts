@@ -108,8 +108,9 @@ function refreshPositionPnL(
 export const useGameStore = create<GameState>()(
   persist(
     (set, get) => ({
-      // ── Wallet ──────────────────────────────────────────────────────────────
+      // ── Wallet (null = guest; set to EVM address when wallet connects) ───────
       walletAddress: null,
+      guestId: `guest_${uuidv4().slice(0, 8)}`,
 
       // ── Financials ──────────────────────────────────────────────────────────
       balance: 100_000,
@@ -134,13 +135,13 @@ export const useGameStore = create<GameState>()(
           id: uuidv4(),
           timestamp: Date.now(),
           level: 'SYS',
-          message: 'ClawArena engine initialized. Connect wallet to begin.',
+          message: 'ClawArena engine initialized. Trading as guest — connect wallet to join the global leaderboard.',
         },
       ],
 
       // ── Market Data ─────────────────────────────────────────────────────────
       marketAssets: INITIAL_ASSETS,
-      startedAt: null,
+      startedAt: Date.now(), // start immediately — no wallet required
 
       // ── Actions ─────────────────────────────────────────────────────────────
 
@@ -148,17 +149,24 @@ export const useGameStore = create<GameState>()(
         const existing = get().walletAddress
         if (existing === address) return
 
-        set({ walletAddress: address, startedAt: Date.now() })
+        // Preserve startedAt if already playing as guest
+        const wasGuest = existing === null
+        set({
+          walletAddress: address,
+          startedAt: wasGuest ? (get().startedAt ?? Date.now()) : Date.now(),
+        })
         get().addThought(
           'SYS',
-          `Wallet connected: ${address.slice(0, 6)}…${address.slice(-4)}`
+          wasGuest
+            ? `Wallet connected: ${address.slice(0, 6)}…${address.slice(-4)} — guest session upgraded to ranked.`
+            : `Wallet switched: ${address.slice(0, 6)}…${address.slice(-4)}`
         )
       },
 
       clearWallet: () => {
-        get().stopTick()
+        // Don't stop ticking — guest mode continues after disconnect
         set({ walletAddress: null })
-        get().addThought('SYS', 'Wallet disconnected.')
+        get().addThought('SYS', 'Wallet disconnected. Continuing as guest (unranked).')
       },
 
       startTick: () => {
@@ -412,6 +420,7 @@ export const useGameStore = create<GameState>()(
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         walletAddress: state.walletAddress,
+        guestId: state.guestId,
         balance: state.balance,
         openPositions: state.openPositions,
         tradeHistory: state.tradeHistory,
@@ -469,8 +478,7 @@ export function computePnLDollar(balance: number, openPositions: Position[]): nu
   return calcTotalEquity(balance, openPositions) - 100_000
 }
 
-export function computeDaysLive(startedAt: number | null): number {
-  if (!startedAt) return 0
+export function computeDaysLive(startedAt: number): number {
   return Math.floor((Date.now() - startedAt) / (1000 * 60 * 60 * 24))
 }
 

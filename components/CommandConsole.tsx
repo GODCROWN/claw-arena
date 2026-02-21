@@ -74,8 +74,9 @@ export function CommandConsole() {
 
     addThought('SYS', `> ${trimmed}`)
 
+    // Guests can add rules locally; AI acknowledgment requires a wallet (API key gated)
     if (!walletAddress) {
-      addThought('WARN', 'Connect wallet to train your AI bot.')
+      addThought('SYS', `Rule saved locally. Connect wallet to enable AI acknowledgment via OpenRouter.`)
       return
     }
 
@@ -184,8 +185,11 @@ export function CommandConsole() {
       {/* Help hint */}
       <div className="px-3 pb-2 flex gap-4 text-[8px] text-[#2a2a4c]">
         <span>↑↓ history</span>
-        <span>Enter to submit rule</span>
-        <span>Rules persist to AI on next tick</span>
+        <span>Enter to add rule</span>
+        {walletAddress
+          ? <span>AI acknowledgment enabled</span>
+          : <span className="text-[#3a3a5c]">Connect wallet for AI acknowledgment</span>
+        }
       </div>
     </div>
   )
