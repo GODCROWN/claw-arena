@@ -1,255 +1,148 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  ReferenceLine,
-} from 'recharts'
-import { useGameStore, computeEquity } from '@/store/useGameStore'
-import type { EquityPoint, LeaderboardResponse } from '@/types'
+import { useGameStore, computeEquity, computePnLPercent, computePnLDollar, computeDaysLive } from '@/store/useGameStore'
 
-// ─── Chart data point ─────────────────────────────────────────────────────────
+// ─── Stat cell ────────────────────────────────────────────────────────────────
 
-interface ChartPoint {
-  time: string
-  userEquity: number
-  topEquity: number | null
-}
-
-// ─── Format timestamp to short date/time ──────────────────────────────────────
-
-function formatTime(ts: number): string {
-  const d = new Date(ts)
-  const now = Date.now()
-  const diffMs = now - ts
-  const diffDays = diffMs / (1000 * 60 * 60 * 24)
-
-  if (diffDays < 1) {
-    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-  }
-  return d.toLocaleDateString([], { month: 'short', day: 'numeric' })
-}
-
-// ─── Custom Tooltip ───────────────────────────────────────────────────────────
-
-interface CustomTooltipProps {
-  active?: boolean
-  payload?: Array<{ value: number; name: string; color: string }>
-  label?: string
-}
-
-function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
-  if (!active || !payload?.length) return null
-
-  return (
-    <div className="bg-[#0f0f1a] border border-[#1a1a2e] px-3 py-2 text-xs font-mono">
-      <p className="text-[#5a5a8a] mb-1">{label}</p>
-      {payload.map((entry) => (
-        <div key={entry.name} className="flex justify-between gap-4">
-          <span style={{ color: entry.color }}>{entry.name}</span>
-          <span className="tabular-nums" style={{ color: entry.color }}>
-            ${entry.value.toLocaleString('en-US', { maximumFractionDigits: 0 })}
-          </span>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-// ─── Merge user equity with top bot equity ────────────────────────────────────
-
-function buildChartData(
-  userHistory: EquityPoint[],
-  topHistory: EquityPoint[]
-): ChartPoint[] {
-  // Downsample to max 96 points for readability
-  const downsample = <T,>(arr: T[], max: number): T[] => {
-    if (arr.length <= max) return arr
-    const step = Math.floor(arr.length / max)
-    return arr.filter((_, i) => i % step === 0)
-  }
-
-  const userPoints = downsample(userHistory.slice(-2016), 96)
-
-  return userPoints.map((point, i) => {
-    const topPoint = topHistory[Math.floor((i / userPoints.length) * topHistory.length)]
-    return {
-      time: formatTime(point.timestamp),
-      userEquity: Math.round(point.equity),
-      topEquity: topPoint ? Math.round(topPoint.equity) : null,
-    }
-  })
-}
-
-// ─── Stat badge ───────────────────────────────────────────────────────────────
-
-function StatBadge({
+function Stat({
   label,
   value,
-  color,
+  sub,
+  color = 'text-[#e0e0ff]',
 }: {
   label: string
   value: string
-  color: string
+  sub?: string
+  color?: string
 }) {
   return (
-    <div className="flex flex-col">
-      <span className="text-[9px] text-[#5a5a8a] uppercase tracking-widest">{label}</span>
-      <span className={`text-sm font-bold tabular-nums ${color}`}>{value}</span>
+    <div className="flex flex-col gap-0.5">
+      <span className="text-[8px] text-[#3a3a5c] uppercase tracking-widest font-medium">{label}</span>
+      <span className={`text-sm sm:text-base font-bold tabular-nums leading-none ${color}`}>{value}</span>
+      {sub && <span className="text-[8px] text-[#3a3a5c] tabular-nums">{sub}</span>}
     </div>
   )
 }
 
-// ─── Main chart component ─────────────────────────────────────────────────────
+// ─── Divider ──────────────────────────────────────────────────────────────────
+
+function VDivider() {
+  return <div className="w-px self-stretch bg-[#1a1a2e] shrink-0" />
+}
+
+// ─── BTC Stats Card (replaces PerformanceChart) ───────────────────────────────
 
 export function PerformanceChart() {
-  const equityHistory = useGameStore((s) => s.equityHistory)
   const balance = useGameStore((s) => s.balance)
   const openPositions = useGameStore((s) => s.openPositions)
-  const [topHistory, setTopHistory] = useState<EquityPoint[]>([])
+  const marketAssets = useGameStore((s) => s.marketAssets)
+  const btcLiveAt = useGameStore((s) => s.btcLiveAt)
+  const startedAt = useGameStore((s) => s.startedAt)
+  const tradeHistory = useGameStore((s) => s.tradeHistory)
+  const restartCount = useGameStore((s) => s.restartCount)
 
-  const currentEquity = computeEquity(balance, openPositions)
-  const pnl = currentEquity - 100_000
-  const pnlPct = (pnl / 100_000) * 100
+  const btc = marketAssets.find((a) => a.symbol === 'BTC')
+  const equity = computeEquity(balance, openPositions)
+  const pnlPct = computePnLPercent(balance, openPositions)
+  const pnlDollar = computePnLDollar(balance, openPositions)
+  const daysLive = computeDaysLive(startedAt)
 
-  // Fetch top bot equity
-  useEffect(() => {
-    async function fetchTop() {
-      try {
-        const res = await fetch('/api/leaderboard?top=1')
-        if (!res.ok) return
-        const data = (await res.json()) as LeaderboardResponse
-        if (data.entries.length > 0) {
-          setTopHistory(data.entries[0].equityHistory)
-        }
-      } catch {
-        // Silently fail — chart still shows user data
-      }
-    }
+  const isLive = btcLiveAt !== null
+  const btcPrice = btc?.price ?? 0
+  const btcMa30 = btc?.ma30 ?? 0
+  const btcChange = btc?.change24h ?? 0
+  const btcDev = btcMa30 > 0 ? ((btcPrice - btcMa30) / btcMa30) * 100 : 0
 
-    fetchTop()
-    const interval = setInterval(fetchTop, 60_000)
-    return () => clearInterval(interval)
-  }, [])
+  const equityColor = equity >= 100_000 ? 'text-[#00ff41]' : 'text-[#ff3333]'
+  const pnlColor = pnlPct >= 0 ? 'text-[#00ff41]' : 'text-[#ff3333]'
+  const btcChangeColor = btcChange >= 0 ? 'text-[#00ff41]' : 'text-[#ff3333]'
+  const devColor = btcDev >= 0 ? 'text-[#00ff41]' : 'text-[#ff3333]'
 
-  const chartData = buildChartData(equityHistory, topHistory)
-
-  const minEquity = Math.min(
-    ...chartData.map((d) => d.userEquity),
-    ...chartData.filter((d) => d.topEquity !== null).map((d) => d.topEquity as number)
-  )
-  const yMin = Math.max(0, Math.floor((minEquity - 5000) / 10000) * 10000)
+  const totalVolume = tradeHistory.reduce((s, t) => s + t.dollarSize, 0)
+  const btcPosition = openPositions.find((p) => p.asset === 'BTC')
 
   return (
-    <div className="bg-[#0f0f1a] border border-[#1a1a2e] p-4">
-      {/* Header — stacks on mobile, side-by-side on md+ */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-3">
-        <div>
-          <h2 className="text-xs font-bold text-[#e0e0ff] tracking-widest uppercase">
-            Performance Chart
-          </h2>
-          <p className="text-[9px] text-[#3a3a5c] mt-0.5">
-            Equity curve vs. global #1
-          </p>
-        </div>
+    <div className="bg-[#0f0f1a] border border-[#1a1a2e]">
+      {/* Top row: BTC live price bar */}
+      <div className="flex items-center gap-3 px-4 py-2.5 border-b border-[#1a1a2e] overflow-x-auto">
+        {/* LIVE badge */}
+        {isLive ? (
+          <span className="flex items-center gap-1.5 shrink-0 text-[9px] font-bold text-[#00ff41] border border-[#00ff41]/30 px-2 py-0.5 uppercase tracking-widest">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#00ff41] animate-pulse" />
+            LIVE
+          </span>
+        ) : (
+          <span className="shrink-0 text-[9px] text-[#3a3a5c] border border-[#3a3a5c]/30 px-2 py-0.5 uppercase tracking-widest">
+            SIM
+          </span>
+        )}
 
-        {/* Stats: 3 across on sm+, scrollable on xs */}
-        <div className="flex gap-3 sm:gap-6 overflow-x-auto pb-1 md:pb-0">
-          <StatBadge
-            label="Equity"
-            value={`$${currentEquity.toLocaleString('en-US', { maximumFractionDigits: 0 })}`}
-            color={currentEquity >= 100_000 ? 'text-[#00ff41]' : 'text-[#ff3333]'}
-          />
-          <StatBadge
+        {/* BTC price — large */}
+        <span className="shrink-0 text-lg sm:text-xl font-bold tabular-nums text-[#e0e0ff] tracking-tight">
+          ${btcPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        </span>
+
+        <span className={`shrink-0 text-xs font-bold tabular-nums ${btcChangeColor}`}>
+          {btcChange >= 0 ? '+' : ''}{btcChange.toFixed(2)}% 24h
+        </span>
+
+        <VDivider />
+
+        <span className="shrink-0 text-[9px] text-[#3a3a5c]">
+          MA30 <span className="text-[#5a5a8a]">${btcMa30.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span>
+        </span>
+
+        <span className={`shrink-0 text-[9px] font-bold ${devColor}`}>
+          {btcDev >= 0 ? '+' : ''}{btcDev.toFixed(2)}% vs MA
+        </span>
+
+        {/* Open BTC position pill */}
+        {btcPosition && (
+          <>
+            <VDivider />
+            <span className={`shrink-0 text-[9px] border px-2 py-0.5 ${btcPosition.unrealizedPnL >= 0 ? 'text-[#00ff41] border-[#00ff41]/30' : 'text-[#ff3333] border-[#ff3333]/30'}`}>
+              LONG {btcPosition.quantity.toFixed(5)} BTC &nbsp;
+              {btcPosition.unrealizedPnL >= 0 ? '+' : ''}${btcPosition.unrealizedPnL.toFixed(0)}
+            </span>
+          </>
+        )}
+
+        {isLive && (
+          <span className="ml-auto shrink-0 text-[8px] text-[#2a2a4c]">Binance SPOT</span>
+        )}
+      </div>
+
+      {/* Bottom row: portfolio stats */}
+      <div className="flex items-center gap-0 divide-x divide-[#1a1a2e] overflow-x-auto">
+        <div className="px-4 py-3 shrink-0">
+          <Stat label="Equity" value={`$${equity.toLocaleString('en-US', { maximumFractionDigits: 0 })}`} color={equityColor} />
+        </div>
+        <div className="px-4 py-3 shrink-0">
+          <Stat
             label="PnL"
-            value={`${pnl >= 0 ? '+' : ''}$${Math.abs(pnl).toLocaleString('en-US', { maximumFractionDigits: 0 })}`}
-            color={pnl >= 0 ? 'text-[#00ff41]' : 'text-[#ff3333]'}
-          />
-          <StatBadge
-            label="Return"
             value={`${pnlPct >= 0 ? '+' : ''}${pnlPct.toFixed(2)}%`}
-            color={pnlPct >= 0 ? 'text-[#00ff41]' : 'text-[#ff3333]'}
+            sub={`${pnlDollar >= 0 ? '+' : ''}$${Math.abs(pnlDollar).toLocaleString('en-US', { maximumFractionDigits: 0 })}`}
+            color={pnlColor}
           />
         </div>
-      </div>
-
-      {/* Legend */}
-      <div className="flex flex-wrap gap-2 sm:gap-4 mb-3">
-        <div className="flex items-center gap-1.5">
-          <div className="w-4 h-px bg-[#00ff41]" />
-          <span className="text-[9px] text-[#5a5a8a]">Your Bot</span>
+        <div className="px-4 py-3 shrink-0">
+          <Stat label="Cash" value={`$${balance.toLocaleString('en-US', { maximumFractionDigits: 0 })}`} color="text-[#e0e0ff]" />
         </div>
-        <div className="flex items-center gap-1.5">
-          <div className="w-4 h-px bg-[#ff6b00]" />
-          <span className="text-[9px] text-[#5a5a8a]">Global #1</span>
+        <div className="px-4 py-3 shrink-0">
+          <Stat label="Days Live" value={`${daysLive}d`} color="text-[#5a5a8a]" />
         </div>
-      </div>
-
-      {/* Chart — shorter on mobile */}
-      <div className="h-40 sm:h-52">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: 8 }}>
-            <CartesianGrid
-              strokeDasharray="1 4"
-              stroke="#1a1a2e"
-              vertical={false}
-            />
-            <XAxis
-              dataKey="time"
-              tick={{ fill: '#3a3a5c', fontSize: 9, fontFamily: 'monospace' }}
-              tickLine={false}
-              axisLine={{ stroke: '#1a1a2e' }}
-              interval="preserveStartEnd"
-            />
-            <YAxis
-              tick={{ fill: '#3a3a5c', fontSize: 9, fontFamily: 'monospace' }}
-              tickLine={false}
-              axisLine={false}
-              tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}k`}
-              domain={[yMin, 'auto']}
-              width={45}
-            />
-            <Tooltip content={<CustomTooltip />} />
-            <ReferenceLine
-              y={100_000}
-              stroke="#1a1a2e"
-              strokeDasharray="4 4"
-              label={{ value: 'Start', fill: '#3a3a5c', fontSize: 9 }}
-            />
-            <ReferenceLine
-              y={90_000}
-              stroke="#ff3333"
-              strokeDasharray="2 4"
-              strokeOpacity={0.4}
-              label={{ value: 'Liq.', fill: '#ff3333', fontSize: 9 }}
-            />
-            <Line
-              type="monotone"
-              dataKey="userEquity"
-              name="Your Bot"
-              stroke="#00ff41"
-              strokeWidth={1.5}
-              dot={false}
-              activeDot={{ r: 3, fill: '#00ff41' }}
-            />
-            <Line
-              type="monotone"
-              dataKey="topEquity"
-              name="Global #1"
-              stroke="#ff6b00"
-              strokeWidth={1}
-              strokeDasharray="4 2"
-              dot={false}
-              activeDot={{ r: 3, fill: '#ff6b00' }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+        <div className="px-4 py-3 shrink-0">
+          <Stat
+            label="Volume"
+            value={`$${(totalVolume / 1000).toFixed(0)}k`}
+            color="text-[#5a5a8a]"
+          />
+        </div>
+        {restartCount > 0 && (
+          <div className="px-4 py-3 shrink-0">
+            <Stat label="Liquidations" value={`×${restartCount}`} color="text-[#ff3333]" />
+          </div>
+        )}
       </div>
     </div>
   )

@@ -133,11 +133,17 @@ export interface LeaderboardEntry {
   rank: number
   walletAddress: string
   ensName?: string
+  botName: string          // OpenClaw bot name / style summary used as display name
   balance: number
   pnlDollar: number
   pnlPercent: number
   daysLive: number
-  totalVolume: number
+  totalVolume: number      // total dollar volume traded (fees base)
+  fees: number             // total fees paid (0.1% per trade)
+  winRate: number          // % of SELL trades that were profitable
+  biggestWin: number       // largest single realized profit ($)
+  biggestLoss: number      // largest single realized loss ($ — stored as negative)
+  tradeCount: number       // total number of trades executed
   styleSummary: string
   restartCount: number
   equityHistory: EquityPoint[]

@@ -85,7 +85,7 @@ POST ${appUrl}/api/train-bot
 JSON matching AITradeDecision schema:
 {
   "action": "BUY" | "SELL" | "HOLD",
-  "asset": "BTC" | "ETH" | "SOL" | "ARB",
+  "asset": "BTC",
   "reasoning": "Brief explanation",
   "w": 0.65,
   "r": 1.8,
@@ -101,15 +101,17 @@ The platform sends POST body:
 {
   "mode": "trade",
   "customInstructions": [],
-  "priceHistory": [{ "timestamp": number, "asset": string, "price": number }],
+  "priceHistory": [{ "timestamp": number, "asset": "BTC", "price": number }],
   "currentBalance": number,
   "openPositions": [Position]
 }
 
 ## Notes
+- Only BTC/USD spot trading is supported
 - Respond ONLY with valid JSON (no markdown wrapping)
 - W must be 0.1–0.9, R must be 0.5–5.0
 - Kelly Criterion is applied server-side for position sizing
+- asset field must always be "BTC"
 `
 
   useEffect(() => {
@@ -135,7 +137,7 @@ The platform sends POST body:
     a.download = 'CLAW_SKILL.md'
     a.click()
     URL.revokeObjectURL(url)
-    addThought('SYS', 'CLAW_SKILL.md downloaded. Configure your self-hosted LLM.')
+    addThought('SYS', 'CLAW_SKILL.md downloaded. Configure your self-hosted LLM to trade BTC.')
   }
 
   const handleCopyToken = async () => {
@@ -200,6 +202,10 @@ The platform sends POST body:
           </div>
         </div>
 
+        <div className="text-[8px] text-[#3a3a5c] leading-relaxed">
+          <span className="text-[#5a5a8a]">Asset:</span> BTC/USD Spot only
+        </div>
+
         <button
           onClick={handleDownload}
           className="w-full flex items-center justify-center gap-2 py-2.5 sm:py-1.5 border border-[#a855f7]/30 text-[#a855f7] hover:bg-[#a855f7]/10 transition-colors text-[9px] uppercase tracking-widest min-h-[44px] sm:min-h-0"
@@ -212,56 +218,61 @@ The platform sends POST body:
   )
 }
 
-// ─── Market Assets Overview ───────────────────────────────────────────────────
+// ─── BTC Market Snapshot ───────────────────────────────────────────────────────
 
-function MarketOverview() {
+function BtcSnapshot() {
   const assets = useGameStore((s) => s.marketAssets)
+  const btcLiveAt = useGameStore((s) => s.btcLiveAt)
+
+  const btc = assets.find((a) => a.symbol === 'BTC')
+  if (!btc) return null
+
+  const isLive = btcLiveAt !== null
+  const deviation = btc.ma30 > 0 ? ((btc.price - btc.ma30) / btc.ma30) * 100 : 0
+  const devColor = deviation >= 0 ? 'text-[#00ff41]' : 'text-[#ff3333]'
+  const changeColor = btc.change24h >= 0 ? 'text-[#00ff41]' : 'text-[#ff3333]'
 
   return (
     <div className="mt-3 border border-[#1a1a2e] p-3">
-      <p className="text-[8px] text-[#3a3a5c] uppercase tracking-widest mb-2">
-        Simulated Market
-      </p>
-      <div className="grid grid-cols-2 gap-1.5">
-        {assets.map((asset) => {
-          const deviation = ((asset.price - asset.ma30) / asset.ma30) * 100
-          const changeColor =
-            deviation > 2
-              ? 'text-[#00ff41]'
-              : deviation < -2
-              ? 'text-[#ff3333]'
-              : 'text-[#e0e0ff]'
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-[8px] text-[#3a3a5c] uppercase tracking-widest">
+          BTC/USD Market
+        </p>
+        {isLive ? (
+          <span className="flex items-center gap-1 text-[8px] text-[#00ff41]">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#00ff41] animate-pulse inline-block" />
+            LIVE
+          </span>
+        ) : (
+          <span className="text-[8px] text-[#3a3a5c]">SIM</span>
+        )}
+      </div>
 
-          return (
-            <div
-              key={asset.symbol}
-              className="bg-[#0a0a0f] border border-[#1a1a2e] px-2 py-1.5"
-            >
-              <div className="flex justify-between items-baseline">
-                <span className="text-[9px] font-bold text-[#5a5a8a]">
-                  {asset.symbol}
-                </span>
-                <span className={`text-[9px] font-bold tabular-nums ${changeColor}`}>
-                  {deviation >= 0 ? '+' : ''}{deviation.toFixed(1)}%
-                </span>
-              </div>
-              <div className="text-[10px] tabular-nums text-[#e0e0ff] mt-0.5">
-                ${asset.price < 10
-                  ? asset.price.toFixed(4)
-                  : asset.price < 1000
-                  ? asset.price.toFixed(2)
-                  : asset.price.toLocaleString('en-US', { maximumFractionDigits: 0 })}
-              </div>
-              <div className="text-[8px] text-[#3a3a5c]">
-                MA30: ${asset.ma30 < 10
-                  ? asset.ma30.toFixed(4)
-                  : asset.ma30 < 1000
-                  ? asset.ma30.toFixed(2)
-                  : asset.ma30.toLocaleString('en-US', { maximumFractionDigits: 0 })}
-              </div>
-            </div>
-          )
-        })}
+      <div className="space-y-1.5">
+        <div className="flex justify-between items-baseline">
+          <span className="text-[9px] text-[#5a5a8a]">Price</span>
+          <span className="text-sm font-bold tabular-nums text-[#e0e0ff]">
+            ${btc.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </span>
+        </div>
+        <div className="flex justify-between items-baseline">
+          <span className="text-[9px] text-[#5a5a8a]">24h Change</span>
+          <span className={`text-[10px] font-bold tabular-nums ${changeColor}`}>
+            {btc.change24h >= 0 ? '+' : ''}{btc.change24h.toFixed(2)}%
+          </span>
+        </div>
+        <div className="flex justify-between items-baseline">
+          <span className="text-[9px] text-[#5a5a8a]">MA30</span>
+          <span className="text-[10px] tabular-nums text-[#5a5a8a]">
+            ${btc.ma30.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+          </span>
+        </div>
+        <div className="flex justify-between items-baseline">
+          <span className="text-[9px] text-[#5a5a8a]">vs MA30</span>
+          <span className={`text-[10px] font-bold tabular-nums ${devColor}`}>
+            {deviation >= 0 ? '+' : ''}{deviation.toFixed(2)}%
+          </span>
+        </div>
       </div>
     </div>
   )
@@ -281,9 +292,19 @@ export function BotSelector() {
 
       <div className="space-y-1.5">
         <BotCard
+          type="openclaw"
+          label="OpenClaw"
+          description="Connect your own self-hosted LLM. Download SKILL.md and configure it to POST to the arena endpoint. Trades BTC/USD spot."
+          active={activeBotType === 'openclaw'}
+          onSelect={() => setBotType('openclaw')}
+          badge="Recommended"
+          badgeColor="text-[#a855f7] border-[#a855f7]/30"
+        />
+
+        <BotCard
           type="martingale"
           label="Martingale"
-          description="Mean-reversion strategy using 30-day MA deviation signals. Win rate & R auto-calculated from trade history."
+          description="Mean-reversion strategy using 30-day MA deviation signals. Win rate & R auto-calculated from BTC trade history."
           active={activeBotType === 'martingale'}
           onSelect={() => setBotType('martingale')}
           badge="Local"
@@ -299,21 +320,11 @@ export function BotSelector() {
           badge="OpenRouter"
           badgeColor="text-[#00d4ff] border-[#00d4ff]/30"
         />
-
-        <BotCard
-          type="openclaw"
-          label="OpenClaw"
-          description="Connect your own self-hosted LLM. Download SKILL.md and configure it to POST to the arena endpoint."
-          active={activeBotType === 'openclaw'}
-          onSelect={() => setBotType('openclaw')}
-          badge="Self-Hosted"
-          badgeColor="text-[#a855f7] border-[#a855f7]/30"
-        />
       </div>
 
       {activeBotType === 'openclaw' && <OpenClawPanel />}
 
-      <MarketOverview />
+      <BtcSnapshot />
     </div>
   )
 }

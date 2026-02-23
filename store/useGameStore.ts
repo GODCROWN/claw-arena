@@ -29,33 +29,6 @@ const INITIAL_ASSETS: MarketAsset[] = [
       65_200 + Math.sin(i * 0.4) * 3000 + Math.random() * 2000
     ),
   },
-  {
-    symbol: 'ETH',
-    price: 3_520,
-    change24h: 0,
-    ma30: 3_380,
-    priceHistory: Array.from({ length: 30 }, (_, i) =>
-      3_380 + Math.sin(i * 0.5) * 200 + Math.random() * 150
-    ),
-  },
-  {
-    symbol: 'SOL',
-    price: 172,
-    change24h: 0,
-    ma30: 158,
-    priceHistory: Array.from({ length: 30 }, (_, i) =>
-      158 + Math.sin(i * 0.6) * 15 + Math.random() * 10
-    ),
-  },
-  {
-    symbol: 'ARB',
-    price: 1.12,
-    change24h: 0,
-    ma30: 1.05,
-    priceHistory: Array.from({ length: 30 }, (_, i) =>
-      1.05 + Math.sin(i * 0.3) * 0.1 + Math.random() * 0.08
-    ),
-  },
 ]
 
 // ─── Helper: simulate realistic price movement ────────────────────────────────
